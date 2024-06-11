@@ -2,7 +2,6 @@ from django.db import models
 
 
 class Buses(models.Model):
-    bus_id = models.IntegerField(verbose_name='автобус id', unique=True)
     model = models.CharField(verbose_name='модель', max_length=100)
     capacity = models.IntegerField(verbose_name='вместимость')
     bus_number = models.CharField(verbose_name='гос. номер', max_length=10)
@@ -15,9 +14,14 @@ class Buses(models.Model):
         return f'{self.model} {self.bus_number}'
 
 class Cruises(models.Model):
-    cruise_id = models.IntegerField(verbose_name='рейс id', unique=True)
-    destination_city = models.CharField(verbose_name='город отправления', max_length=100)
-    city_arrival = models.CharField(verbose_name='город прибытия', max_length=100)
+    destination_city = models.ForeignKey('Cities',
+                                         related_name='destination_city',
+                                         verbose_name='город отправления', 
+                                         on_delete=models.CASCADE)
+    city_arrival = models.ForeignKey('Cities', 
+                                    related_name='city_arrival',
+                                    verbose_name='город прибытия', 
+                                    on_delete=models.CASCADE)
     dispatch_time = models.DateTimeField(verbose_name='время отправления')
     arrival_time = models.DateTimeField(verbose_name='время прибытия')
     total_distance = models.IntegerField(verbose_name='общее расстояние')
@@ -30,14 +34,25 @@ class Cruises(models.Model):
         verbose_name_plural = 'Рейсы'
 
     def __str__(self):
-        return f'{self.cruise_id}'
+        return f'{self.id}'
+    
+class Gender(models.Model):
+    gender = models.CharField(verbose_name='пол', max_length=1)
+
+    class Meta:
+        verbose_name = 'Пол'
+        verbose_name_plural = 'Пол'
+
+    def __str__(self):
+        return f'{self.gender}'
 
 class Passengers(models.Model):
-    passenger_id = models.IntegerField(verbose_name='пассажир id', unique=True)
     name = models.CharField(verbose_name='имя', max_length=50)
     surname = models.CharField(verbose_name='фамилия', max_length=50)
     patronymic = models.CharField(verbose_name='отчество', max_length=50, null=True)
-    gender = models.CharField(verbose_name='пол', max_length=1)
+    gender = models.ForeignKey('Gender', 
+                               verbose_name='пол', 
+                               on_delete=models.CASCADE)
     birth_date = models.DateField(verbose_name='дата рождения')
     document_id = models.ForeignKey('Documents',
                                     verbose_name='id документа',
@@ -52,10 +67,9 @@ class Passengers(models.Model):
         verbose_name_plural = 'Пассажиры'
 
     def __str__(self):
-        return f'{self.passenger_id} {self.name} {self.surname} {self.patronymic}'
+        return f'{self.name} {self.surname} {self.patronymic}'
 
 class Documents(models.Model):
-    document_id = models.IntegerField(verbose_name='документ id', unique=True)
     document_type = models.CharField(verbose_name='тип документа', max_length=50)
 
     class Meta:
@@ -66,14 +80,10 @@ class Documents(models.Model):
         return f'{self.document_type}'
 
 class Stations(models.Model):
-    station_id = models.IntegerField(verbose_name='станция id', unique=True)
     station_name = models.CharField(verbose_name='название станции', max_length=100)
-    city_id = models.ForeignKey('Cities',
-                                verbose_name='город id',
-                                on_delete=models.CASCADE)
     address = models.CharField(verbose_name='адрес', max_length=255)
     district_id = models.ForeignKey('Districts',
-                                    verbose_name='город id',
+                                    verbose_name='Район',
                                     on_delete=models.CASCADE)
 
     class Meta:
@@ -84,7 +94,6 @@ class Stations(models.Model):
         return f'{self.station_name} {self.city_id} {self.address}'
 
 class Discounts(models.Model):
-    discount_id = models.IntegerField(verbose_name='скидки id', unique=True)
     description = models.TextField(verbose_name='описание', max_length=500)
     discount_percent = models.IntegerField()
     start_date = models.DateTimeField(verbose_name='действует с', null=True)
@@ -101,7 +110,6 @@ class Discounts(models.Model):
         return f'{self.description}'
 
 class Tickets(models.Model):
-    ticket_id = models.IntegerField(verbose_name='билет id', unique=True)
     cruise_id = models.ForeignKey('Cruises',
                                   verbose_name='рейс id',
                                   on_delete=models.CASCADE)
@@ -128,10 +136,9 @@ class Tickets(models.Model):
         verbose_name_plural = 'Билеты'
 
     def __str__(self):
-        return f'{self.ticket_id}'
+        return f'{self.id}'
     
 class Employes(models.Model):
-    employe_id = models.IntegerField(verbose_name='сотрудник id', unique=True)
     name = models.CharField(verbose_name='имя', max_length=50)
     surname = models.CharField(verbose_name='фамилия', max_length=50)
     patronymic = models.CharField(verbose_name='отчество', max_length=50, null=True)
@@ -144,10 +151,9 @@ class Employes(models.Model):
         verbose_name_plural = 'Сотрудники'
 
     def __str__(self):
-        return f'{self.employe_id} {self.name} {self.surname} {self.patronymic}'
+        return f'{self.name} {self.surname} {self.patronymic}'
     
 class Payment(models.Model):
-    payment_id = models.IntegerField(verbose_name='оплата id', unique=True)
     payment_date = models.DateTimeField(verbose_name='дата платежа')
     cost = models.DecimalField(verbose_name='стоимость',
                                max_digits=10,
@@ -162,10 +168,9 @@ class Payment(models.Model):
         verbose_name_plural = 'Оплата'
 
     def __str__(self):
-        return f'{self.payment_id}'
+        return f'{self.id}'
     
 class Drivers(models.Model):
-    driver_id = models.IntegerField(verbose_name='водитель id', unique=True)
     name = models.CharField(verbose_name='имя', max_length=50)
     surname = models.CharField(verbose_name='фамилия', max_length=50)
     patronymic = models.CharField(verbose_name='отчество', max_length=50, null=True)
@@ -177,10 +182,9 @@ class Drivers(models.Model):
         verbose_name_plural = 'Водители'
 
     def __str__(self):
-        return f'{self.driver_id} {self.name} {self.surname} {self.patronymic}'
+        return f'{self.name} {self.surname} {self.patronymic}'
 
 class Activity_logs(models.Model):
-    log_id = models.IntegerField(verbose_name='логи id', unique=True)
     employe_id = models.ForeignKey('Employes',
                                    verbose_name='сотрудник id',
                                    on_delete=models.CASCADE)
@@ -194,10 +198,9 @@ class Activity_logs(models.Model):
         verbose_name_plural = 'Логи активности'
 
     def __str__(self):
-        return f'{self.log_id}'
+        return f'{self.id}'
 
 class Countrys(models.Model):
-    country_id = models.IntegerField(verbose_name='страна id', unique=True)
     country_name = models.CharField(verbose_name='название страны', max_length=50)
 
     class Meta:
@@ -208,7 +211,6 @@ class Countrys(models.Model):
         return f'{self.country_name}'
 
 class Cruise_type(models.Model):
-    cruise_id = models.IntegerField(verbose_name='тип id', unique=True)
     cruise_type = models.CharField(verbose_name='тип рейса', max_length=50)
 
     class Meta:
@@ -219,7 +221,6 @@ class Cruise_type(models.Model):
         return f'{self.cruise_type}'
 
 class Carrier_organizations(models.Model):
-    organization_id = models.IntegerField(verbose_name='организация id', unique=True)
     organization_name = models.CharField(verbose_name='название организации', max_length=100)
     organization_license = models.CharField(verbose_name='лицензия перевозчика', max_length=100)
 
@@ -231,7 +232,6 @@ class Carrier_organizations(models.Model):
         return f'{self.organization_name}'
 
 class Carrier(models.Model):
-    carrier_id = models.IntegerField(verbose_name='перевозчик id', unique=True)
     driver_id = models.ForeignKey('Drivers',
                                   verbose_name='Водитель id',
                                   on_delete=models.CASCADE)
@@ -247,10 +247,9 @@ class Carrier(models.Model):
         verbose_name_plural = 'Перевозчики'
 
     def __str__(self):
-        return f'{self.carrier_id}'
+        return f'{self.id}'
     
 class Cruise_route(models.Model):
-    cruise_route_id = models.IntegerField(verbose_name='маршрут id', unique=True)
     cruise_id = models.ForeignKey('Cruises',
                                   verbose_name='рейс id',
                                   on_delete=models.CASCADE)
@@ -272,12 +271,13 @@ class Cruise_route(models.Model):
         verbose_name_plural = 'Маршруты рейсов'
 
     def __str__(self):
-        return f'{self.cruise_route_id}'
+        return f'{self.id}'
 
 class Cities(models.Model):
-    city_id = models.IntegerField(verbose_name='город id', unique=True)
     name = models.CharField(verbose_name='название', max_length=50)
-    type = models.CharField(verbose_name='тип', max_length=100)
+    type = models.ForeignKey('City_type',
+                            verbose_name='тип населенного пункта',
+                            on_delete=models.CASCADE)
     region_id = models.ForeignKey('Regions',
                                   verbose_name='регион id',
                                   on_delete=models.CASCADE)
@@ -288,9 +288,18 @@ class Cities(models.Model):
 
     def __str__(self):
         return f'{self.name}'
+
+class City_type(models.Model):
+    city_type = models.CharField(verbose_name='Тип населенного пункта', max_length=100)
+
+    class Meta:
+        verbose_name = 'Тип города'
+        verbose_name_plural = 'Типы городов'
+
+    def __str__(self):
+        return f'{self.city_type}'
     
 class Regions(models.Model):
-    region_id = models.IntegerField(verbose_name='регион id', unique=True)
     region_name = models.CharField(verbose_name='название региона',
                                    max_length=100)
     country_id = models.ForeignKey('Countrys',
@@ -305,13 +314,11 @@ class Regions(models.Model):
         return f'{self.region_name}'
 
 class Districts(models.Model):
-    district_id = models.IntegerField(verbose_name='район id')
     name = models.CharField(verbose_name='название района',
                             max_length=100)
     city_id = models.ForeignKey('Cities',
                                 verbose_name='город id',
                                 on_delete=models.CASCADE)
-
     class Meta:
         verbose_name = 'Район'
         verbose_name_plural = 'Районы'
@@ -320,7 +327,6 @@ class Districts(models.Model):
         return f'{self.name}'
     
 class Registration_method(models.Model):
-    method_id = models.IntegerField(verbose_name='способ id', unique=True)
     description = models.CharField(verbose_name='оформление билета', max_length=50)
 
     class Meta:
@@ -331,7 +337,6 @@ class Registration_method(models.Model):
         return f'{self.description}'
 
 class Tariffs(models.Model):
-    Tariff_id = models.IntegerField(verbose_name='тариф id', unique=True)
     organization_id = models.ForeignKey('Carrier',
                                         verbose_name='код перевозчика',
                                         on_delete=models.CASCADE)
@@ -342,4 +347,5 @@ class Tariffs(models.Model):
         verbose_name_plural = 'Тарифы'
 
     def __str__(self):
-        return f'{self.Tariff_id}'
+        return f'{self.id}'
+    
